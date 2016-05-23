@@ -3,6 +3,7 @@ sys.path.append('../commonfiles/python')
 import optparse
 import logging.config
 import time
+from yapsy.PluginManager import PluginManager
 
 def load_plugin_callback(plugin_info):
   plugin_info
@@ -24,12 +25,11 @@ def main():
 
   if options.log_config_file:
     logging.config.fileConfig(options.log_config_file)
+    logging.getLogger('yapsy').setLevel(logging.DEBUG)
   logger = logging.getLogger(__name__)
 
-  from yapsy.PluginManager import PluginManager
 
   logger.info("Log file opened.")
-
 
   plugin_dirs = options.plugin_directories.split(',')
   #plugin_dirs = (["plugins"])
@@ -37,16 +37,19 @@ def main():
   # Build the manager
   simplePluginManager = PluginManager()
   # Tell it the default place(s) where to find plugins
+  if logger:
+    logger.debug("Plugin directories: %s" % (options.plugin_directories))
+
   simplePluginManager.setPluginPlaces(plugin_dirs)
   # Load all plugins
-  simplePluginManager.locatePlugins()
-  simplePluginManager.loadPlugins(callback=load_plugin_callback)
-  #simplePluginManager.collectPlugins()
+  if logger:
+    logger.info("Begin loading plugins")
+  simplePluginManager.collectPlugins()
 
   plugin_proc_start = time.time()
   for plugin in simplePluginManager.getAllPlugins():
     if logger:
-      logger.info("Executing plugin: %s" % (plugin.name))
+      logger.info("Starting plugin: %s" % (plugin.name))
     plugin.plugin_object.inititalize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name)
     plugin.plugin_object.start()
 
