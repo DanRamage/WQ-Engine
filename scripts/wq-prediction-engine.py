@@ -5,9 +5,6 @@ import logging.config
 import time
 from yapsy.PluginManager import PluginManager
 
-def load_plugin_callback(plugin_info):
-  plugin_info
-  return
 def main():
   parser = optparse.OptionParser()
   parser.add_option("-l", "--LogConfigFile", dest="log_config_file",
@@ -28,7 +25,6 @@ def main():
     logging.getLogger('yapsy').setLevel(logging.DEBUG)
   logger = logging.getLogger(__name__)
 
-
   logger.info("Log file opened.")
 
   plugin_dirs = options.plugin_directories.split(',')
@@ -47,21 +43,25 @@ def main():
   simplePluginManager.collectPlugins()
 
   plugin_proc_start = time.time()
+  cnt = 0
+
   for plugin in simplePluginManager.getAllPlugins():
     if logger:
       logger.info("Starting plugin: %s" % (plugin.name))
     plugin.plugin_object.inititalize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name)
     plugin.plugin_object.start()
+    cnt += 1
 
   #Wait for the plugings to finish up.
   if logger:
-    logger.info("Waiting for plugins to complete.")
+    logger.info("Waiting for %d plugins to complete." % (cnt))
   for plugin in simplePluginManager.getAllPlugins():
     plugin.plugin_object.join()
   if logger:
     logger.info("Plugins completed in %f seconds" % (time.time() - plugin_proc_start))
 
     #plugin.plugin_object.run_wq_models()
+
   if logger:
     logger.info("Log file closed.")
 
