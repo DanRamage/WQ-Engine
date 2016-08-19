@@ -1,9 +1,11 @@
 import sys
-sys.path.append('../commonfiles/python')
+sys.path.append('../../commonfiles/python')
 import optparse
 import logging.config
 import time
 from yapsy.PluginManager import PluginManager
+
+from wq_prediction_plugin import wq_prediction_engine_plugin
 
 def main():
   parser = optparse.OptionParser()
@@ -36,6 +38,9 @@ def main():
   if logger:
     logger.debug("Plugin directories: %s" % (options.plugin_directories))
 
+  simplePluginManager.setCategoriesFilter({
+     "PredictionEngine" : wq_prediction_engine_plugin
+     })
   simplePluginManager.setPluginPlaces(plugin_dirs)
   # Load all plugins
   if logger:
