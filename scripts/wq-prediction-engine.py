@@ -53,7 +53,7 @@ def main():
   for plugin in simplePluginManager.getAllPlugins():
     if logger:
       logger.info("Starting plugin: %s" % (plugin.name))
-    plugin.plugin_object.inititalize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name)
+    plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name)
     plugin.plugin_object.start()
     cnt += 1
 
