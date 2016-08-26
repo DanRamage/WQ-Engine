@@ -53,8 +53,10 @@ def main():
   for plugin in simplePluginManager.getAllPlugins():
     if logger:
       logger.info("Starting plugin: %s" % (plugin.name))
-    plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name)
-    plugin.plugin_object.start()
+    if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name):
+      plugin.plugin_object.start()
+    else:
+      logger.error("Failed to initialize plugin: %s" % (plugin.name))
     cnt += 1
 
   #Wait for the plugings to finish up.
