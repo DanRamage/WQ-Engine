@@ -49,25 +49,25 @@ def main():
 
   plugin_proc_start = time.time()
   cnt = 0
+  try:
+    for plugin in simplePluginManager.getAllPlugins():
+      if logger:
+        logger.info("Starting plugin: %s" % (plugin.name))
+      if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name):
+        plugin.plugin_object.start()
+      else:
+        logger.error("Failed to initialize plugin: %s" % (plugin.name))
+      cnt += 1
 
-  for plugin in simplePluginManager.getAllPlugins():
+    #Wait for the plugings to finish up.
     if logger:
-      logger.info("Starting plugin: %s" % (plugin.name))
-    if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name):
-      plugin.plugin_object.start()
-    else:
-      logger.error("Failed to initialize plugin: %s" % (plugin.name))
-    cnt += 1
-
-  #Wait for the plugings to finish up.
-  if logger:
-    logger.info("Waiting for %d plugins to complete." % (cnt))
-  for plugin in simplePluginManager.getAllPlugins():
-    plugin.plugin_object.join()
-  if logger:
-    logger.info("Plugins completed in %f seconds" % (time.time() - plugin_proc_start))
-
-    #plugin.plugin_object.run_wq_models()
+      logger.info("Waiting for %d plugins to complete." % (cnt))
+    for plugin in simplePluginManager.getAllPlugins():
+      plugin.plugin_object.join()
+    if logger:
+      logger.info("Plugins completed in %f seconds" % (time.time() - plugin_proc_start))
+  except Exception as e:
+    logger.exception(e)
 
   if logger:
     logger.info("Log file closed.")
