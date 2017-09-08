@@ -4,7 +4,9 @@ import optparse
 import logging.config
 import time
 from yapsy.PluginManager import PluginManager
+from multiprocessing import Process, Queue, Event
 
+from multi_proc_logging import listener_process
 from wq_prediction_plugin import wq_prediction_engine_plugin
 
 def main():
@@ -24,8 +26,33 @@ def main():
 
   if options.log_config_file:
     logging.config.fileConfig(options.log_config_file)
-    logging.getLogger('yapsy').setLevel(logging.DEBUG)
-  logger = logging.getLogger(__name__)
+    #logging.getLogger('yapsy').setLevel(logging.DEBUG)
+
+  log_stop_event = Event()
+  log_queue = Queue()
+  log_config_plugin = {
+      'version': 1,
+      'disable_existing_loggers': True,
+      'handlers': {
+          'queue': {
+              'class': 'logutils.queue.QueueHandler',
+              'queue': log_queue,
+          },
+      },
+      'root': {
+        'level': 'NOTSET',
+        'handlers': ['queue']
+      }
+  }
+
+  lp = Process(target=listener_process, name='listener',
+               args=(log_queue, log_stop_event, options.log_config_file))
+  lp.start()
+
+  #logging.config.fileConfig(logfile)
+  logging.config.dictConfig(log_config_plugin)
+
+  logger = logging.getLogger("WQ-Engine")
 
   logger.info("Log file opened.")
 
@@ -53,7 +80,9 @@ def main():
     for plugin in simplePluginManager.getAllPlugins():
       if logger:
         logger.info("Starting plugin: %s" % (plugin.name))
-      if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"), name=plugin.name):
+      if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"),
+                                                name=plugin.name,
+                                                log_config_dict=log_config_plugin):
         plugin.plugin_object.start()
       else:
         logger.error("Failed to initialize plugin: %s" % (plugin.name))
@@ -66,6 +95,11 @@ def main():
       plugin.plugin_object.join()
     if logger:
       logger.info("Plugins completed in %f seconds" % (time.time() - plugin_proc_start))
+
+    logger.debug("Shutting down logger.")
+    log_stop_event.set()
+    lp.join()
+
   except Exception as e:
     logger.exception(e)
 
