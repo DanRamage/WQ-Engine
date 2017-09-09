@@ -6,7 +6,7 @@ import time
 from yapsy.PluginManager import PluginManager
 from multiprocessing import Process, Queue, Event
 
-from multi_proc_logging import listener_process
+#from multi_proc_logging import listener_process
 from wq_prediction_plugin import wq_prediction_engine_plugin
 
 def main():
@@ -26,8 +26,8 @@ def main():
 
   if options.log_config_file:
     logging.config.fileConfig(options.log_config_file)
-    #logging.getLogger('yapsy').setLevel(logging.DEBUG)
-
+    logging.getLogger('yapsy').setLevel(logging.DEBUG)
+  """
   log_stop_event = Event()
   log_queue = Queue()
   log_config_plugin = {
@@ -48,9 +48,9 @@ def main():
   lp = Process(target=listener_process, name='listener',
                args=(log_queue, log_stop_event, options.log_config_file))
   lp.start()
-
+  """
   #logging.config.fileConfig(logfile)
-  logging.config.dictConfig(log_config_plugin)
+  #logging.config.dictConfig(log_config_plugin)
 
   logger = logging.getLogger("WQ-Engine")
 
@@ -97,9 +97,10 @@ def main():
       logger.info("Plugins completed in %f seconds" % (time.time() - plugin_proc_start))
 
     logger.debug("Shutting down logger.")
+    """
     log_stop_event.set()
     lp.join()
-
+    """
   except Exception as e:
     logger.exception(e)
 
