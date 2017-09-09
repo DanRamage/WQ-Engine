@@ -81,8 +81,7 @@ def main():
       if logger:
         logger.info("Starting plugin: %s" % (plugin.name))
       if plugin.plugin_object.initialize_plugin(ini=plugin.details.get("Core", "Ini"),
-                                                name=plugin.name,
-                                                log_config_dict=log_config_plugin):
+                                                name=plugin.name):
         plugin.plugin_object.start()
       else:
         logger.error("Failed to initialize plugin: %s" % (plugin.name))
